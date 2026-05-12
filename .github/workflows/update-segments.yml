@@ -1,8 +1,6 @@
 name: Update Segment Ratios
 
 on:
-  schedule:
-    - cron: "0 1 * * 1" # Every Monday 10:00 KST
   workflow_dispatch:
 
 jobs:
@@ -17,7 +15,7 @@ jobs:
           REDASH_QUERY_ID: ${{ secrets.REDASH_QUERY_ID }}
           REDASH_URL: ${{ secrets.REDASH_URL }}
         run: |
-          curl -fsSL -H "Authorization: Key $REDASH_API_KEY" \
+          curl --connect-timeout 15 --max-time 60 -fsSL -H "Authorization: Key $REDASH_API_KEY" \
             "$REDASH_URL/api/queries/$REDASH_QUERY_ID/results.json" \
             -o redash_result.json
 

@@ -2551,20 +2551,45 @@ let SEGMENT_RATIOS = {
   other_implicit_le: { pct: 34.60, count: 477613 }
 };
 
-fetch("./data/segments.json")
-  .then(res => {
-    if (!res.ok) throw new Error("segments.json not found");
-    return res.json();
-  })
-  .then(data => {
-    if (!data || !data.ratios) throw new Error("segments.json has no ratios");
-    SEGMENT_RATIOS = data.ratios;
-    console.log("Loaded segments from", data.updated_at);
-    if (typeof applySegmentRatios === "function") applySegmentRatios();
-  })
-  .catch(err => {
-    console.warn("Using fallback SEGMENT_RATIOS:", err.message);
-  });
+const DEFAULT_SEGMENT_DATA_URL = "./data/segments.json";
+
+async function fetchJson(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`${url} returned ${res.status}`);
+  return res.json();
+}
+
+async function getSegmentDataUrls() {
+  try {
+    const config = await fetchJson("./data/segments-source.json");
+    return [config.google_sheet_web_app_url, DEFAULT_SEGMENT_DATA_URL].filter(Boolean);
+  } catch (err) {
+    console.warn("Using default segment data source:", err.message);
+    return [DEFAULT_SEGMENT_DATA_URL];
+  }
+}
+
+async function loadSegmentRatios() {
+  const urls = await getSegmentDataUrls();
+  const errors = [];
+
+  for (const url of urls) {
+    try {
+      const data = await fetchJson(url);
+      if (!data || !data.ratios) throw new Error(`${url} has no ratios`);
+      SEGMENT_RATIOS = data.ratios;
+      console.log("Loaded segments from", data.updated_at, "via", url);
+      if (typeof applySegmentRatios === "function") applySegmentRatios();
+      return;
+    } catch (err) {
+      errors.push(err.message);
+    }
+  }
+
+  console.warn("Using fallback SEGMENT_RATIOS:", errors.join(" / "));
+}
+
+loadSegmentRatios();
 
 const nodeValidationMap = {
   le: {
