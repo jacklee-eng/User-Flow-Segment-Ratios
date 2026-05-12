@@ -2593,13 +2593,18 @@ function normalizeSegmentData(data) {
 
   const ratios = {};
   let totalUsers = 0;
+  let totalRowFound = false;
   let updatedAt = "";
 
   data.forEach(row => {
-    const key = SEGMENT_API_MAP[row.segment];
+    const segment = row.segment || row.final_category;
     const count = Number(row.user_cnt || 0);
-    if (count) totalUsers += count;
+    if (segment === "Z_TOTAL_HOME_USERS") {
+      totalUsers = count;
+      totalRowFound = true;
+    }
     if (row.date && !updatedAt) updatedAt = row.date;
+    const key = SEGMENT_API_MAP[segment];
     if (!key) return;
 
     ratios[key] = {
@@ -2607,6 +2612,12 @@ function normalizeSegmentData(data) {
       count
     };
   });
+
+  if (!totalRowFound) {
+    totalUsers = Object.values(ratios).reduce((sum, ratio) => sum + (ratio?.count || 0), 0);
+  }
+
+  if (!totalUsers) throw new Error("segment data total users is 0");
 
   const p1ToP4Count = sumRatioCounts(ratios, ["P1", "P2", "P3", "P4"]);
   const p5ToP6Count = sumRatioCounts(ratios, ["P5", "P6"]);

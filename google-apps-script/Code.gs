@@ -129,10 +129,15 @@ function installMondayThursdayTriggers() {
 function buildSegmentsOutput_(rows) {
   const ratios = {};
   let totalUsers = 0;
+  let totalRowFound = false;
 
   rows.forEach(row => {
     const count = Number(row.user_cnt || 0);
-    totalUsers += count;
+    if (row.final_category === "Z_TOTAL_HOME_USERS") {
+      totalUsers = count;
+      totalRowFound = true;
+      return;
+    }
 
     const key = SEGMENT_MAP[row.final_category];
     if (key) {
@@ -142,6 +147,14 @@ function buildSegmentsOutput_(rows) {
       };
     }
   });
+
+  if (!totalRowFound) {
+    totalUsers = Object.keys(ratios).reduce((sum, key) => sum + (ratios[key] ? ratios[key].count : 0), 0);
+  }
+
+  if (!totalUsers) {
+    throw new Error("Total users is 0");
+  }
 
   const p1ToP4Count = sumCounts_(ratios, ["P1", "P2", "P3", "P4"]);
   const p5ToP6Count = sumCounts_(ratios, ["P5", "P6"]);

@@ -50,10 +50,15 @@ function makeRatio(count, total, note) {
 
 const ratios = {};
 let totalUsers = 0;
+let totalRowFound = false;
 
 rows.forEach(row => {
   const count = Number(row.user_cnt || 0);
-  totalUsers += count;
+  if (row.final_category === "Z_TOTAL_HOME_USERS") {
+    totalUsers = count;
+    totalRowFound = true;
+    return;
+  }
 
   const key = SEGMENT_MAP[row.final_category];
   if (key) {
@@ -63,6 +68,14 @@ rows.forEach(row => {
     };
   }
 });
+
+if (!totalRowFound) {
+  totalUsers = Object.values(ratios).reduce((sum, ratio) => sum + (ratio?.count || 0), 0);
+}
+
+if (!totalUsers) {
+  throw new Error("Total users is 0");
+}
 
 const p1ToP4Count = sumCounts(ratios, ["P1", "P2", "P3", "P4"]);
 const p5ToP6Count = sumCounts(ratios, ["P5", "P6"]);
@@ -130,6 +143,12 @@ const output = {
   period_start: toDateString(periodStart),
   period_end: toDateString(periodEnd),
   total_users: totalUsers,
+  source: {
+    type: "redash",
+    query_id: 15388,
+    query_name: "UserFlow Segment Ratios Weekly",
+    url: "https://redash-contents.datahou.se/queries/15388/source"
+  },
   ratios: orderedRatios
 };
 
