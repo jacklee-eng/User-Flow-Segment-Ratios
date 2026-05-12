@@ -58,20 +58,7 @@ function updateSegmentsFromRedash() {
   const queryId = getRequiredProperty_(props, REDASH_QUERY_ID_PROPERTY);
   const apiKey = getRequiredProperty_(props, REDASH_API_KEY_PROPERTY);
 
-  const response = UrlFetchApp.fetch(`${redashUrl}/api/queries/${queryId}/results.json`, {
-    method: "get",
-    headers: {
-      Authorization: `Key ${apiKey}`
-    },
-    muteHttpExceptions: true
-  });
-
-  const status = response.getResponseCode();
-  if (status < 200 || status >= 300) {
-    throw new Error(`Redash request failed with HTTP ${status}: ${response.getContentText()}`);
-  }
-
-  const redashData = JSON.parse(response.getContentText());
+  const redashData = fetchRedashQueryResult_(redashUrl, queryId, apiKey);
   const rows = redashData && redashData.query_result && redashData.query_result.data && redashData.query_result.data.rows;
   if (!Array.isArray(rows)) {
     throw new Error("Invalid Redash result: query_result.data.rows is missing");
@@ -80,6 +67,45 @@ function updateSegmentsFromRedash() {
   const output = buildSegmentsOutput_(rows);
   writeSegmentsToSheet_(output);
   return output;
+}
+
+function fetchRedashQueryResult_(redashUrl, queryId, apiKey) {
+  const endpoints = [
+    {
+      label: "Authorization header",
+      url: `${redashUrl}/api/queries/${queryId}/results.json`,
+      options: {
+        method: "get",
+        headers: {
+          Authorization: `Key ${apiKey}`
+        },
+        muteHttpExceptions: true
+      }
+    },
+    {
+      label: "api_key query parameter",
+      url: `${redashUrl}/api/queries/${queryId}/results.json?api_key=${encodeURIComponent(apiKey)}`,
+      options: {
+        method: "get",
+        muteHttpExceptions: true
+      }
+    }
+  ];
+
+  const errors = [];
+  for (const endpoint of endpoints) {
+    try {
+      const response = UrlFetchApp.fetch(endpoint.url, endpoint.options);
+      const status = response.getResponseCode();
+      const body = response.getContentText();
+      if (status >= 200 && status < 300) return JSON.parse(body);
+      errors.push(`${endpoint.label}: HTTP ${status} ${body.slice(0, 300)}`);
+    } catch (err) {
+      errors.push(`${endpoint.label}: ${err.message}`);
+    }
+  }
+
+  throw new Error(`Redash request failed. ${errors.join(" / ")}`);
 }
 
 function installMondayThursdayTriggers() {
