@@ -2659,10 +2659,10 @@ function normalizeSegmentData(data) {
 async function getSegmentDataUrls() {
   try {
     const config = await fetchJson("./data/segments-source.json");
-    return [config.google_sheet_web_app_url, DEFAULT_SEGMENT_DATA_URL].filter(Boolean);
+    return ["/api/segments", config.google_sheet_web_app_url, DEFAULT_SEGMENT_DATA_URL].filter(Boolean);
   } catch (err) {
     console.warn("Using default segment data source:", err.message);
-    return [DEFAULT_SEGMENT_DATA_URL];
+    return ["/api/segments", DEFAULT_SEGMENT_DATA_URL];
   }
 }
 
