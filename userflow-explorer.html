@@ -2552,11 +2552,97 @@ let SEGMENT_RATIOS = {
 };
 
 const DEFAULT_SEGMENT_DATA_URL = "./data/segments.json";
+const SEGMENT_API_MAP = {
+  P1_construction_full: "P1",
+  P2_construction_partial: "P2",
+  P3_moving_only: "P3",
+  P4_newlywed: "P4",
+  P5_construction_contract: "P5",
+  P6_moving_contract: "P6",
+  P8_childbirth: "P8",
+  Other_Implicit_LE: "other_implicit_le",
+  M1_Purpose_Buy: "M1",
+  M2_Context_Explore: "M2",
+  M_Undetermined: "M_undetermined"
+};
 
 async function fetchJson(url) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`${url} returned ${res.status}`);
   return res.json();
+}
+
+function roundPct(count, total) {
+  if (!total) return 0;
+  return Math.round((count * 10000) / total) / 100;
+}
+
+function sumRatioCounts(ratios, keys) {
+  return keys.reduce((sum, key) => sum + (ratios[key]?.count || 0), 0);
+}
+
+function makeSegmentRatio(count, total, note) {
+  const ratio = { pct: roundPct(count, total), count };
+  if (note) ratio.note = note;
+  return ratio;
+}
+
+function normalizeSegmentData(data) {
+  if (data?.ratios) return data;
+  if (!Array.isArray(data)) throw new Error("segment data has no ratios");
+
+  const ratios = {};
+  let totalUsers = 0;
+  let updatedAt = "";
+
+  data.forEach(row => {
+    const key = SEGMENT_API_MAP[row.segment];
+    const count = Number(row.user_cnt || 0);
+    if (count) totalUsers += count;
+    if (row.date && !updatedAt) updatedAt = row.date;
+    if (!key) return;
+
+    ratios[key] = {
+      pct: Number(row.ratio ?? row.pct),
+      count
+    };
+  });
+
+  const p1ToP4Count = sumRatioCounts(ratios, ["P1", "P2", "P3", "P4"]);
+  const p5ToP6Count = sumRatioCounts(ratios, ["P5", "P6"]);
+  const p8Count = ratios.P8?.count || 0;
+  const otherImplicitCount = ratios.other_implicit_le?.count || 0;
+  const m1Count = ratios.M1?.count || 0;
+  const m2Count = ratios.M2?.count || 0;
+  const undeterminedCount = ratios.M_undetermined?.count || 0;
+
+  const aCount = p1ToP4Count + otherImplicitCount;
+  const bCount = p5ToP6Count;
+  const cCount = p8Count;
+  const leCount = aCount + bCount + cCount;
+  const nonleCount = m1Count + m2Count + undeterminedCount;
+
+  ratios.entry = makeSegmentRatio(totalUsers, totalUsers, "7일 unique");
+  ratios["le-axis"] = makeSegmentRatio(leCount, totalUsers, "LE 유저");
+  ratios["nonle-axis"] = makeSegmentRatio(nonleCount, totalUsers, "non LE 유저");
+  ratios.le = makeSegmentRatio(leCount, totalUsers);
+  ratios.nonle = makeSegmentRatio(nonleCount, totalUsers);
+  ratios.A = makeSegmentRatio(
+    aCount,
+    totalUsers,
+    `Explicit ${roundPct(p1ToP4Count, totalUsers).toFixed(2)}%(${formatCount(p1ToP4Count)}) + Implicit ${roundPct(otherImplicitCount, totalUsers).toFixed(2)}%(${formatCount(otherImplicitCount)})`
+  );
+  ratios.B = makeSegmentRatio(bCount, totalUsers);
+  ratios.C = makeSegmentRatio(cCount, totalUsers);
+  ratios.purpose = makeSegmentRatio(m1Count, totalUsers);
+  ratios.context = makeSegmentRatio(m2Count, totalUsers);
+  ratios.P7 = null;
+
+  return {
+    updated_at: updatedAt || new Date().toISOString(),
+    total_users: totalUsers,
+    ratios
+  };
 }
 
 async function getSegmentDataUrls() {
@@ -2575,8 +2661,7 @@ async function loadSegmentRatios() {
 
   for (const url of urls) {
     try {
-      const data = await fetchJson(url);
-      if (!data || !data.ratios) throw new Error(`${url} has no ratios`);
+      const data = normalizeSegmentData(await fetchJson(url));
       SEGMENT_RATIOS = data.ratios;
       console.log("Loaded segments from", data.updated_at, "via", url);
       if (typeof applySegmentRatios === "function") applySegmentRatios();
