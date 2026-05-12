@@ -156,24 +156,13 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const url = `${redashUrl}/api/queries/${queryId}/results.json?api_key=${encodeURIComponent(apiKey)}`;
+  const baseUrls = [
+    redashUrl,
+    redashUrl.replace(/^https:\/\//, "http://")
+  ].filter((url, index, urls) => urls.indexOf(url) === index);
 
   try {
-    const redashResponse = await fetch(url, {
-      headers: { Accept: "application/json" }
-    });
-    const body = await redashResponse.text();
-
-    if (!redashResponse.ok) {
-      res.status(502).json({
-        error: "Redash request failed",
-        status: redashResponse.status,
-        body: body.slice(0, 500)
-      });
-      return;
-    }
-
-    const redashData = JSON.parse(body);
+    const redashData = await fetchRedashResult(baseUrls, queryId, apiKey);
     const rows = redashData?.query_result?.data?.rows;
     if (!Array.isArray(rows)) {
       res.status(502).json({ error: "Invalid Redash result: query_result.data.rows is missing" });
@@ -183,6 +172,36 @@ module.exports = async function handler(req, res) {
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=3600");
     res.status(200).json(buildSegmentsOutput(rows));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+      cause: err.cause?.message,
+      name: err.name
+    });
   }
 };
+
+async function fetchRedashResult(baseUrls, queryId, apiKey) {
+  const errors = [];
+
+  for (const baseUrl of baseUrls) {
+    const url = `${baseUrl}/api/queries/${queryId}/results.json?api_key=${encodeURIComponent(apiKey)}`;
+    try {
+      const redashResponse = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "UserFlowSegmentRatios/1.0"
+        },
+        signal: AbortSignal.timeout(15000)
+      });
+      const body = await redashResponse.text();
+
+      if (redashResponse.ok) return JSON.parse(body);
+
+      errors.push(`${baseUrl}: HTTP ${redashResponse.status} ${body.slice(0, 300)}`);
+    } catch (err) {
+      errors.push(`${baseUrl}: ${err.name} ${err.message}${err.cause?.message ? ` (${err.cause.message})` : ""}`);
+    }
+  }
+
+  throw new Error(`Redash request failed: ${errors.join(" / ")}`);
+}
