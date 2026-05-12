@@ -1,0 +1,30 @@
+{
+  "updated_at": "2026-05-11T00:00:00+09:00",
+  "period_start": "2026-05-03",
+  "period_end": "2026-05-09",
+  "total_users": 1380267,
+  "ratios": {
+    "entry": { "pct": 100, "count": 1380267, "note": "7일 unique" },
+    "le-axis": { "pct": 49.57, "count": 684185, "note": "LE 유저" },
+    "nonle-axis": { "pct": 50.43, "count": 696082, "note": "non LE 유저" },
+    "le": { "pct": 49.57, "count": 684185 },
+    "nonle": { "pct": 50.43, "count": 696082 },
+    "A": { "pct": 44.26, "count": 610888, "note": "Explicit 9.66%(133,285) + Implicit 34.60%(477,603)" },
+    "B": { "pct": 4.18, "count": 57655 },
+    "C": { "pct": 1.13, "count": 15642 },
+    "purpose": { "pct": 36.52, "count": 504110 },
+    "context": { "pct": 4.70, "count": 64809 },
+    "M_undetermined": { "pct": 9.21, "count": 127163 },
+    "M1": { "pct": 36.52, "count": 504110 },
+    "M2": { "pct": 4.70, "count": 64809 },
+    "P1": { "pct": 2.55, "count": 35138 },
+    "P2": { "pct": 0.67, "count": 9219 },
+    "P3": { "pct": 5.95, "count": 82173 },
+    "P4": { "pct": 0.85, "count": 11695 },
+    "P5": { "pct": 3.14, "count": 43370 },
+    "P6": { "pct": 1.03, "count": 14285 },
+    "P7": null,
+    "P8": { "pct": 0.77, "count": 10681 },
+    "other_implicit_le": { "pct": 34.60, "count": 477613 }
+  }
+}
