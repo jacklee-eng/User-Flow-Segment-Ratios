@@ -7,31 +7,17 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/jack.lee/Documents/커서/Product Design/UserFlow_2/scripts/update-segments-local.sh</string>
+    <string>/Users/jack.lee/Library/Application Support/UserFlowSegments/update-segments-local.sh</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/jack.lee/Documents/커서/Product Design/UserFlow_2</string>
+  <string>/Users/jack.lee/Library/Application Support/UserFlowSegments</string>
 
-  <key>StartCalendarInterval</key>
-  <array>
-    <dict>
-      <key>Weekday</key>
-      <integer>1</integer>
-      <key>Hour</key>
-      <integer>6</integer>
-      <key>Minute</key>
-      <integer>0</integer>
-    </dict>
-    <dict>
-      <key>Weekday</key>
-      <integer>4</integer>
-      <key>Hour</key>
-      <integer>6</integer>
-      <key>Minute</key>
-      <integer>0</integer>
-    </dict>
-  </array>
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StartInterval</key>
+  <integer>1800</integer>
 
   <key>StandardOutPath</key>
   <string>/Users/jack.lee/Library/Logs/userflow-segments-update.log</string>

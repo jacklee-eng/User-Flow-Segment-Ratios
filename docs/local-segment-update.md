@@ -51,16 +51,21 @@ Install the launchd job:
 scripts/install-launchd-update.sh
 ```
 
-Schedule:
+Schedule behavior:
 
-- Monday 06:00
-- Thursday 06:00
+- launchd checks every 30 minutes and also checks once at login/load.
+- On Monday and Thursday only, the script runs the first time Redash is reachable from the Mac.
+- After a successful fetch/transform for that date, it records the date and skips the rest of the day.
+- If the Mac is off or outside internal Wi-Fi/VPN, it keeps skipping until a later check can reach Redash.
+- The scheduled job runs from an automation checkout at `~/Library/Application Support/UserFlowSegments/repo` to avoid macOS blocking background access to the Documents folder.
 
 Requirements:
 
 - The Mac is awake and logged in.
 - The Mac is on the internal Wi-Fi/VPN that can reach Redash.
 - GitHub SSH auth and Vercel CLI auth are still valid.
+
+Manual double-click via `Update Segments.command` uses `--force`, so it ignores the Monday/Thursday and once-per-day checks.
 
 Logs:
 
