@@ -36,8 +36,8 @@
     --teal-50: #e7f7f2;
     --teal-600: #0f766e;
     --teal-800: #0b4f4a;
-    --header-height: 76px;
-    --sticky-top: 92px;
+    --header-height: 98px;
+    --sticky-top: 114px;
     --ui-scale: 1;
 
     --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -434,9 +434,11 @@
   }
 
   .ratio-basis-note {
-    margin: -6px 0 10px 0;
+    margin: 6px 0 0 auto;
     font-size: 11px;
     color: var(--text-tertiary);
+    text-align: right;
+    max-width: min(920px, 100%);
   }
 
   .ut-legend {
@@ -1235,6 +1237,7 @@
         </button>
       </div>
     </div>
+    <p class="ratio-basis-note" id="ratio-basis-note">비율 기준: KR 홈 진입 7일 unique(기본값 2026-05-03~05-09), 우선순위 배타 분류(B &gt; C &gt; A-Explicit &gt; A-Implicit &gt; non LE). P7은 데이터 소스 미확인으로 미산출.</p>
   </div>
 
   <div class="split-layout">
@@ -1259,8 +1262,6 @@
     <button class="preset-btn" data-preset="M2">non LE (M2 맥락 탐색형)</button>
     <button class="reset-btn" id="reset-btn">초기화</button>
   </div>
-  <p class="ratio-basis-note" id="ratio-basis-note">비율 기준: KR 홈 진입 7일 unique(기본값 2026-05-03~05-09), 우선순위 배타 분류(B &gt; C &gt; A-Explicit &gt; A-Implicit &gt; non LE). P7은 데이터 소스 미확인으로 미산출.</p>
-
   <div class="layer-row">
     <div>
       <div class="layer-tag">L0</div>
