@@ -434,11 +434,12 @@
   }
 
   .ratio-basis-note {
-    margin: 6px 0 0 auto;
-    font-size: 11px;
+    margin: 4px 0 0 auto;
+    font-size: 10px;
     color: var(--text-tertiary);
     text-align: right;
-    max-width: min(920px, 100%);
+    width: fit-content;
+    max-width: 100%;
   }
 
   .ut-legend {
@@ -1237,7 +1238,7 @@
         </button>
       </div>
     </div>
-    <p class="ratio-basis-note" id="ratio-basis-note">비율 기준: KR 홈 진입 7일 unique(기본값 2026-05-03~05-09), 우선순위 배타 분류(B &gt; C &gt; A-Explicit &gt; A-Implicit &gt; non LE). P7은 데이터 소스 미확인으로 미산출.</p>
+    <p class="ratio-basis-note" id="ratio-basis-note">비율 기준: KR 홈 진입 7일 unique(기본값 2026-05-03~05-09)</p>
   </div>
 
   <div class="split-layout">
@@ -2602,11 +2603,7 @@ function updateRatioBasisNote(data) {
     ? `${formatPeriodDate(data.period_start)}~${formatPeriodDate(data.period_end)}`
     : "기간 정보 없음";
 
-  const total = data?.total_users
-    ? `, 모수 ${formatCount(data.total_users)}명`
-    : "";
-
-  noteEl.textContent = `비율 기준: KR 홈 진입 7일 unique(${period}${total}), 우선순위 배타 분류(B > C > A-Explicit > A-Implicit > non LE). P7은 데이터 소스 미확인으로 미산출.`;
+  noteEl.textContent = `비율 기준: KR 홈 진입 7일 unique(${period})`;
 }
 
 function normalizeSegmentData(data) {
