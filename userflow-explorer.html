@@ -1259,7 +1259,7 @@
     <button class="preset-btn" data-preset="M2">non LE (M2 맥락 탐색형)</button>
     <button class="reset-btn" id="reset-btn">초기화</button>
   </div>
-  <p class="ratio-basis-note">비율 기준: KR 홈 진입 7일 unique(2026-05-03~05-09), 우선순위 배타 분류(B &gt; C &gt; A-Explicit &gt; A-Implicit &gt; non LE). P7은 데이터 소스 미확인으로 미산출.</p>
+  <p class="ratio-basis-note" id="ratio-basis-note">비율 기준: KR 홈 진입 7일 unique(기본값 2026-05-03~05-09), 우선순위 배타 분류(B &gt; C &gt; A-Explicit &gt; A-Implicit &gt; non LE). P7은 데이터 소스 미확인으로 미산출.</p>
 
   <div class="layer-row">
     <div>
@@ -2587,6 +2587,27 @@ function makeSegmentRatio(count, total, note) {
   return ratio;
 }
 
+function formatPeriodDate(dateString) {
+  const match = String(dateString || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return dateString;
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
+function updateRatioBasisNote(data) {
+  const noteEl = document.getElementById("ratio-basis-note");
+  if (!noteEl) return;
+
+  const period = data?.period_start && data?.period_end
+    ? `${formatPeriodDate(data.period_start)}~${formatPeriodDate(data.period_end)}`
+    : "기간 정보 없음";
+
+  const total = data?.total_users
+    ? `, 모수 ${formatCount(data.total_users)}명`
+    : "";
+
+  noteEl.textContent = `비율 기준: KR 홈 진입 7일 unique(${period}${total}), 우선순위 배타 분류(B > C > A-Explicit > A-Implicit > non LE). P7은 데이터 소스 미확인으로 미산출.`;
+}
+
 function normalizeSegmentData(data) {
   if (data?.ratios) return data;
   if (!Array.isArray(data)) throw new Error("segment data has no ratios");
@@ -2676,6 +2697,7 @@ async function loadSegmentRatios() {
       SEGMENT_RATIOS = data.ratios;
       console.log("Loaded segments from", data.updated_at, "via", url);
       if (typeof applySegmentRatios === "function") applySegmentRatios();
+      updateRatioBasisNote(data);
       return;
     } catch (err) {
       errors.push(err.message);
