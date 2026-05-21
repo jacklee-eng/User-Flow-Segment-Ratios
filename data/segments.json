@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-05-18T00:13:28.712Z",
-  "period_start": "2026-05-10",
-  "period_end": "2026-05-16",
+  "updated_at": "2026-05-21T00:38:00.007Z",
+  "period_start": "2026-05-13",
+  "period_end": "2026-05-19",
   "total_users": 1412703,
   "source": {
     "type": "redash",
